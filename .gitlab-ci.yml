@@ -1,0 +1,57 @@
+image: node:16
+
+stages:
+  - build
+  - test
+  - deploy
+
+install:
+  stage: build
+  script:
+    - npm i
+  artifacts:
+    paths:
+      - node_modules
+
+build:
+  stage: build
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - dist
+  needs:
+    - job: install
+      artifacts: true
+
+.cypress:
+  image: cypress/base:16
+  stage: test
+  artifacts:
+    when: always
+    paths:
+      - cypress/videos/**/*.mp4
+      - cypress/screenshots/**/*.png
+    expire_in: 1 day
+
+e2e_tests:
+  extends: .cypress
+  script:
+    - npx cypress install
+    - npm run test:e2e
+  needs:
+    - job: build
+      artifacts: true
+    - job: install
+      artifacts: true
+deploy:
+  stage: deploy
+  script:
+    - npm run deploy
+
+
+
+
+
+
+  
